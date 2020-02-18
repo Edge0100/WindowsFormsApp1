@@ -72,10 +72,14 @@ namespace WindowsFormsApp1
                         break;
                     }
             }
-            if (GetTileInfo(cube.getMapX(), cube.getMapY()) == Status.Dead) this.Close();
-            graphics.Clear(Color.White);
-            DrawMap();
-            cube.DrawCube(graphics);
+            var a = getTileInfo(cube.getMapX(), cube.getMapY());
+            if (a == Status.Dead||(cube.redSideOnBottom()&&a==Status.Winner)) this.Close();
+            else
+            {
+                graphics.Clear(Color.White);
+                DrawMap();
+                cube.DrawCube(graphics);
+            }
 
         }
 
@@ -105,7 +109,7 @@ namespace WindowsFormsApp1
 
             graphics = CreateGraphics();
 
-            mapData = File.ReadAllLines("C:/Users/admin/Desktop/WindowsFormsApp1/WindowsFormsApp1/Новый текстовый документ.txt");
+            mapData = File.ReadAllLines("./Новый текстовый документ.txt");
             mapGraphics = new Rectangle[mapData.Length][];
 
             for (int i=0; i<mapData.Length;i++)
