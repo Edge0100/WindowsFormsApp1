@@ -20,6 +20,10 @@ namespace WindowsFormsApp1
     {
         string[]        mapData;
         Rectangle[][]   mapGraphics;
+        List<Node> States = new List<Node>();
+        Queue<Node> OpenNodes = new Queue<Node>();
+        Queue<Node> ClosedNodes = new Queue<Node>();
+
 
         public 
         const int   xOffset = 20, 
@@ -71,9 +75,19 @@ namespace WindowsFormsApp1
                         cube.MoveCube(Directions.South);
                         break;
                     }
+                case Keys.Enter:
+                    {
+                        States.Find(x =>
+                        {
+                            x.X == cube.getMapX(),
+                            x.Y == cube.getMapY()
+                            });
+                        break;
+                    }
+
             }
-            var a = getTileInfo(cube.getMapX(), cube.getMapY());
-            if (a == Status.Dead||(cube.redSideOnBottom()&&a==Status.Winner)) this.Close();
+            var a = GetTileInfo(cube.getMapX(), cube.getMapY());
+            if (a == Status.Dead||(cube.RedSideIsOnBottom()&&a==Status.Winner)) this.Close();
             else
             {
                 graphics.Clear(Color.White);
@@ -109,7 +123,7 @@ namespace WindowsFormsApp1
 
             graphics = CreateGraphics();
 
-            mapData = File.ReadAllLines("./Новый текстовый документ.txt");
+            mapData = File.ReadAllLines("../../Новый текстовый документ.txt");
             mapGraphics = new Rectangle[mapData.Length][];
 
             for (int i=0; i<mapData.Length;i++)
@@ -123,7 +137,16 @@ namespace WindowsFormsApp1
                     mapGraphics[i][j].Y = yOffset + i * tileSize;
                     mapGraphics[i][j].Width = mapGraphics[i][j].Height = tileSize;
                     if (mapData[i][j] == '0') continue;
-                    else if (mapData[i][j] == '1') graphics.DrawRectangle(blackPen, mapGraphics[i][j]);
+                    else if (mapData[i][j] == '1')
+                    {
+                        graphics.DrawRectangle(blackPen, mapGraphics[i][j]);
+                        States.Add(new Node(i, j, Sides.Back));
+                        States.Add(new Node(i, j, Sides.Bottom));
+                        States.Add(new Node(i, j, Sides.Front));
+                        States.Add(new Node(i, j, Sides.Left));
+                        States.Add(new Node(i, j, Sides.Right));
+                        States.Add(new Node(i, j, Sides.Top));
+                    }
                     else graphics.FillRectangle(greenPen.Brush, mapGraphics[i][j]);
                 }
             }

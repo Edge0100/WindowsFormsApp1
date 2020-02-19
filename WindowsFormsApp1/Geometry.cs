@@ -15,5 +15,14 @@
             Alive,
             Winner
         }
+        public enum Sides
+        {
+            Left,
+            Right,
+            Front,
+            Back,
+            Top,
+            Bottom
+        }
     }
 }

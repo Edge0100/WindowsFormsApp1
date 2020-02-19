@@ -5,15 +5,7 @@ namespace WindowsFormsApp1
 {
     public class Cube
     {
-        enum Sides
-        {
-            Left,
-            Right,
-            Front,
-            Back,
-            Top,
-            Bottom
-        }
+        
 
         Rectangle cubeSide;
         Pen blackPen;
@@ -41,6 +33,10 @@ namespace WindowsFormsApp1
             redPen.Width = 4;
             blackPen = new Pen(Color.Black);
         }
+        public Sides GetRedSidePos()
+        {
+            return redSide;
+        }
         public int getMapX()
         {
             return x;
@@ -48,6 +44,10 @@ namespace WindowsFormsApp1
         public int getMapY()
         {
             return y;
+        }
+        public bool RedSideIsOnBottom()
+        {
+            return redSide == Sides.Bottom;
         }
         public void DrawCube(Graphics graphics)
         {
