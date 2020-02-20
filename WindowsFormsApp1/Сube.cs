@@ -11,48 +11,48 @@ namespace WindowsFormsApp1
         Pen blackPen;
         Pen transparentRedPen;
         Pen redPen;
-        Sides redSide;
+        
         const int xOffset = 5, yOffset = 5, cubeSize = 20;
-        int x, y;
+        
         public Cube(int startMapX, int startMapY)
         {
-            x = startMapX;
-            y = startMapY;
+            X = startMapX;
+            Y = startMapY;
 
             cubeSide = new Rectangle();
 
-            cubeSide.X = Form1.xOffset + xOffset + y * Form1.tileSize;
-            cubeSide.Y = Form1.yOffset + yOffset + x * Form1.tileSize;
+            cubeSide.X = Form1.xOffset + xOffset + Y * Form1.tileSize;
+            cubeSide.Y = Form1.yOffset + yOffset + X * Form1.tileSize;
 
             cubeSide.Width = cubeSide.Height = cubeSize;
 
-            redSide = Sides.Bottom;
+            RedSidePos = Sides.Bottom;
 
             transparentRedPen = new Pen(Color.FromArgb(127, 127, 0, 0));
             redPen = new Pen(Color.Red);
             redPen.Width = 4;
             blackPen = new Pen(Color.Black);
         }
-        public Sides GetRedSidePos()
+        public Sides RedSidePos
         {
-            return redSide;
+            get;set;
         }
-        public int getMapX()
+        public int X
         {
-            return x;
+            get;set;
         }
-        public int getMapY()
+        public int Y
         {
-            return y;
+            get;set;
         }
         public bool RedSideIsOnBottom()
         {
-            return redSide == Sides.Bottom;
+            return RedSidePos == Sides.Bottom;
         }
         public void DrawCube(Graphics graphics)
         {
             int half = cubeSize / 2;
-            switch (redSide)
+            switch (RedSidePos)
             {
                 case Sides.Top:
                     {
@@ -96,28 +96,28 @@ namespace WindowsFormsApp1
             {
                 case Directions.West:
                     {
-                        x--;
+                        X--;
                         break;
                     }
                 case Directions.North:
                     {
-                        y--;
+                        Y--;
                         break;
                     }
                 case Directions.East:
                     {
-                        x++;
+                        X++;
                         break;
                     }
                 case Directions.South:
                     {
-                        y++;
+                        Y++;
                         break;
                     }
             }
-            cubeSide.X = Form1.xOffset + xOffset + x * Form1.tileSize;
-            cubeSide.Y = Form1.yOffset + yOffset + y * Form1.tileSize;
-            switch (redSide)
+            cubeSide.X = Form1.xOffset + xOffset + X * Form1.tileSize;
+            cubeSide.Y = Form1.yOffset + yOffset + Y * Form1.tileSize;
+            switch (RedSidePos)
             {
                 case Sides.Top:
                     {
@@ -125,22 +125,22 @@ namespace WindowsFormsApp1
                         {
                             case Directions.West:
                                 {
-                                    redSide = Sides.Left;
+                                    RedSidePos = Sides.Left;
                                     break;
                                 }
                             case Directions.North:
                                 {
-                                    redSide = Sides.Front;
+                                    RedSidePos = Sides.Front;
                                     break;
                                 }
                             case Directions.East:
                                 {
-                                    redSide = Sides.Right;
+                                    RedSidePos = Sides.Right;
                                     break;
                                 }
                             case Directions.South:
                                 {
-                                    redSide = Sides.Back;
+                                    RedSidePos = Sides.Back;
                                     break;
                                 }
                         }
@@ -153,22 +153,22 @@ namespace WindowsFormsApp1
                         {
                             case Directions.West:
                                 {
-                                    redSide = Sides.Right;
+                                    RedSidePos = Sides.Right;
                                     break;
                                 }
                             case Directions.North:
                                 {
-                                    redSide = Sides.Back;
+                                    RedSidePos = Sides.Back;
                                     break;
                                 }
                             case Directions.East:
                                 {
-                                    redSide = Sides.Left;
+                                    RedSidePos = Sides.Left;
                                     break;
                                 }
                             case Directions.South:
                                 {
-                                    redSide = Sides.Front;
+                                    RedSidePos = Sides.Front;
                                     break;
                                 }
                         }
@@ -180,13 +180,13 @@ namespace WindowsFormsApp1
                         {
                             case Directions.West:
                                 {
-                                    redSide = Sides.Bottom;
+                                    RedSidePos = Sides.Bottom;
                                     break;
                                 }
 
                             case Directions.East:
                                 {
-                                    redSide = Sides.Top;
+                                    RedSidePos = Sides.Top;
                                     break;
                                 }
 
@@ -199,13 +199,13 @@ namespace WindowsFormsApp1
                         {
                             case Directions.North:
                                 {
-                                    redSide = Sides.Bottom;
+                                    RedSidePos = Sides.Bottom;
                                     break;
                                 }
 
                             case Directions.South:
                                 {
-                                    redSide = Sides.Top;
+                                    RedSidePos = Sides.Top;
                                     break;
                                 }
 
@@ -218,13 +218,13 @@ namespace WindowsFormsApp1
                         {
                             case Directions.East:
                                 {
-                                    redSide = Sides.Bottom;
+                                    RedSidePos = Sides.Bottom;
                                     break;
                                 }
 
                             case Directions.West:
                                 {
-                                    redSide = Sides.Top;
+                                    RedSidePos = Sides.Top;
                                     break;
                                 }
 
@@ -237,13 +237,13 @@ namespace WindowsFormsApp1
                         {
                             case Directions.South:
                                 {
-                                    redSide = Sides.Bottom;
+                                    RedSidePos = Sides.Bottom;
                                     break;
                                 }
 
                             case Directions.North:
                                 {
-                                    redSide = Sides.Top;
+                                    RedSidePos = Sides.Top;
                                     break;
                                 }
 

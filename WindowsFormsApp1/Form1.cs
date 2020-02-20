@@ -20,10 +20,9 @@ namespace WindowsFormsApp1
     {
         string[]        mapData;
         Rectangle[][]   mapGraphics;
-        List<Node> States = new List<Node>();
         Queue<Node> OpenNodes = new Queue<Node>();
         Queue<Node> ClosedNodes = new Queue<Node>();
-
+        Stack<Directions> resultMoves= new Stack<Directions>();
 
         public 
         const int   xOffset = 20, 
@@ -41,7 +40,7 @@ namespace WindowsFormsApp1
             InitializeComponent();
         }
         
-        public Status GetTileInfo(int i, int j)
+        private Status GetTileInfo(int i, int j)
         {
             switch (mapData[j][i])
             {
@@ -49,6 +48,85 @@ namespace WindowsFormsApp1
                 case '2': return Status.Winner;
                 default:  return Status.Dead;
             }
+        }
+
+        private bool AddNodeToOpenQueue(Node parent, Directions moveDirection)
+        {
+            var info = GetTileInfo(cube.X, cube.Y);
+
+            if (info == Status.Alive)
+            {
+                if (
+                        !(
+                        OpenNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos) ||
+                        ClosedNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos)
+                         )
+                      )
+                {
+                    OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos, parent, moveDirection));
+
+                }
+            }
+            else if (info == Status.Winner && cube.RedSideIsOnBottom())
+            {
+                resultMoves.Push(moveDirection);
+                Node curr = parent;
+
+                do
+                {
+                    resultMoves.Push(curr.InitMove);
+                    curr = curr.Parent;
+                } while (curr.Parent!= null);
+                return true;
+            }
+            return false;
+        }
+        private bool AI()
+        {
+            Node curr;
+            bool end;
+            while(OpenNodes.Count>0)
+            {
+                curr = OpenNodes.Dequeue();
+
+                cube.X = curr.X;
+                cube.Y = curr.Y;
+                cube.RedSidePos = curr.RedSidePos;
+
+                cube.MoveCube(Directions.West);
+                if (AddNodeToOpenQueue(curr, Directions.West)) return true;
+                cube.MoveCube(Directions.East);
+
+                cube.MoveCube(Directions.North);
+                if (AddNodeToOpenQueue(curr, Directions.North)) return true;
+                cube.MoveCube(Directions.South);
+
+                cube.MoveCube(Directions.East);
+                if(AddNodeToOpenQueue(curr, Directions.East)) return true;
+                cube.MoveCube(Directions.West);
+
+                cube.MoveCube(Directions.South);
+                if(AddNodeToOpenQueue(curr, Directions.South))return true;
+                cube.MoveCube(Directions.North);
+
+
+
+                ClosedNodes.Enqueue(curr);
+            }
+            return false;
+        }
+
+        private void CommandChainExecution()
+        {
+            do
+            {
+                cube.MoveCube(resultMoves.Pop());
+                System.Threading.Thread.Sleep(1000);
+                graphics.Clear(Color.White);
+                DrawMap();
+                cube.DrawCube(graphics);
+
+            } while (resultMoves.Count > 0);
         }
 
         private void Form1_KeyUp(object sender, KeyEventArgs e)
@@ -77,17 +155,24 @@ namespace WindowsFormsApp1
                     }
                 case Keys.Enter:
                     {
-                        States.Find(x =>
-                        {
-                            x.X == cube.getMapX(),
-                            x.Y == cube.getMapY()
-                            });
+                        OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos,null));
+                        if (AI()) 
+                        { 
+                            cube.X = ClosedNodes.Peek().X;
+                            cube.Y = ClosedNodes.Peek().Y;
+                            cube.RedSidePos = ClosedNodes.Peek().RedSidePos;
+                            CommandChainExecution();
+                                }
+                        OpenNodes.Clear();
+                        ClosedNodes.Clear();
+                        resultMoves.Clear();
+                        
                         break;
                     }
 
             }
-            var a = GetTileInfo(cube.getMapX(), cube.getMapY());
-            if (a == Status.Dead||(cube.RedSideIsOnBottom()&&a==Status.Winner)) this.Close();
+            var a = GetTileInfo(cube.X, cube.Y);
+            if (a == Status.Dead/*||(cube.RedSideIsOnBottom()&&a==Status.Winner)*/) this.Close();
             else
             {
                 graphics.Clear(Color.White);
@@ -123,7 +208,7 @@ namespace WindowsFormsApp1
 
             graphics = CreateGraphics();
 
-            mapData = File.ReadAllLines("../../Новый текстовый документ.txt");
+            mapData = File.ReadAllLines("Новый текстовый документ.txt");
             mapGraphics = new Rectangle[mapData.Length][];
 
             for (int i=0; i<mapData.Length;i++)
@@ -140,12 +225,7 @@ namespace WindowsFormsApp1
                     else if (mapData[i][j] == '1')
                     {
                         graphics.DrawRectangle(blackPen, mapGraphics[i][j]);
-                        States.Add(new Node(i, j, Sides.Back));
-                        States.Add(new Node(i, j, Sides.Bottom));
-                        States.Add(new Node(i, j, Sides.Front));
-                        States.Add(new Node(i, j, Sides.Left));
-                        States.Add(new Node(i, j, Sides.Right));
-                        States.Add(new Node(i, j, Sides.Top));
+
                     }
                     else graphics.FillRectangle(greenPen.Brush, mapGraphics[i][j]);
                 }
