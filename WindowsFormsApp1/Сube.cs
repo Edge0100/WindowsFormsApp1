@@ -33,6 +33,7 @@ namespace WindowsFormsApp1
             redPen.Width = 4;
             blackPen = new Pen(Color.Black);
         }
+        public int Gx { get; set; }
         public Sides RedSidePos
         {
             get;set;

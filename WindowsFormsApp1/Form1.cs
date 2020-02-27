@@ -23,11 +23,12 @@ namespace WindowsFormsApp1
         Queue<Node> OpenNodes = new Queue<Node>();
         Queue<Node> ClosedNodes = new Queue<Node>();
         Stack<Directions> resultMoves= new Stack<Directions>();
-
+        Node target;
         public 
         const int   xOffset = 20, 
                     yOffset = 20,
                     tileSize = 30;
+        int numOfFloorTiles=0;
         
         Graphics    graphics;
         Pen         blackPen;
@@ -50,7 +51,7 @@ namespace WindowsFormsApp1
             }
         }
 
-        private bool AddNodeToOpenQueue(Node parent, Directions moveDirection)
+        private bool AddNodeToOpenQueueWidth(Node parent, Directions moveDirection)
         {
             var info = GetTileInfo(cube.X, cube.Y);
 
@@ -84,7 +85,7 @@ namespace WindowsFormsApp1
         private bool AI()
         {
             Node curr;
-            bool end;
+            
             while(OpenNodes.Count>0)
             {
                 curr = OpenNodes.Dequeue();
@@ -94,19 +95,19 @@ namespace WindowsFormsApp1
                 cube.RedSidePos = curr.RedSidePos;
 
                 cube.MoveCube(Directions.West);
-                if (AddNodeToOpenQueue(curr, Directions.West)) return true;
+                if (AddNodeToOpenQueueWidth(curr, Directions.West)) return true;
                 cube.MoveCube(Directions.East);
 
                 cube.MoveCube(Directions.North);
-                if (AddNodeToOpenQueue(curr, Directions.North)) return true;
+                if (AddNodeToOpenQueueWidth(curr, Directions.North)) return true;
                 cube.MoveCube(Directions.South);
 
                 cube.MoveCube(Directions.East);
-                if(AddNodeToOpenQueue(curr, Directions.East)) return true;
+                if(AddNodeToOpenQueueWidth(curr, Directions.East)) return true;
                 cube.MoveCube(Directions.West);
 
                 cube.MoveCube(Directions.South);
-                if(AddNodeToOpenQueue(curr, Directions.South))return true;
+                if(AddNodeToOpenQueueWidth(curr, Directions.South))return true;
                 cube.MoveCube(Directions.North);
 
 
@@ -121,7 +122,7 @@ namespace WindowsFormsApp1
             do
             {
                 cube.MoveCube(resultMoves.Pop());
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(500);
                 graphics.Clear(Color.White);
                 DrawMap();
                 cube.DrawCube(graphics);
@@ -169,6 +170,13 @@ namespace WindowsFormsApp1
                         
                         break;
                     }
+                case Keys.Space:
+                    {
+                        OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos, null));
+                        OpenNodes.Peek().Gx = 0;
+                        if (AStar()) ;
+                        break;
+                    }
 
             }
             var a = GetTileInfo(cube.X, cube.Y);
@@ -181,7 +189,88 @@ namespace WindowsFormsApp1
             }
 
         }
+        private bool AStar()
+        {
+            Node curr;
+            while (OpenNodes.Count>0)
+            {
+                curr = OpenNodes.Dequeue();
 
+                cube.X = curr.X;
+                cube.Y = curr.Y;
+                cube.RedSidePos = curr.RedSidePos;
+                cube.Gx=curr.Gx;
+
+                cube.MoveCube(Directions.West);
+                if (AddNodeToOpenQueueAStar(curr, Directions.West)) return true;
+                cube.MoveCube(Directions.East);
+
+                cube.MoveCube(Directions.North);
+                if (AddNodeToOpenQueueAStar(curr, Directions.North)) return true;
+                cube.MoveCube(Directions.South);
+
+                cube.MoveCube(Directions.East);
+                if (AddNodeToOpenQueueAStar(curr, Directions.East)) return true;
+                cube.MoveCube(Directions.West);
+
+                cube.MoveCube(Directions.South);
+                if (AddNodeToOpenQueueAStar(curr, Directions.South)) return true;
+                cube.MoveCube(Directions.North);
+
+
+
+                ClosedNodes.Enqueue(curr);
+            }
+            return false;
+        }
+        private float Heuristic(Cube curr)
+        {
+            float h= Math.Abs( curr.X-target.X)+Math.Abs(curr.Y-target.Y);
+            if(h>=0&&h<=numOfFloorTiles-curr.Gx) return h;
+            else return 100000;
+        }
+        private void AddNodeToOpenQueueAStar(Node parent, Directions moveDirection)
+        {
+            var info = GetTileInfo(cube.X, cube.Y);
+            var fx = cube.Gx+Heuristic(cube);
+
+
+            if (info == Status.Alive)
+            {
+                if (
+                        !(
+                        OpenNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos) ||
+                        ClosedNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos)
+                         )
+                      )
+                {
+                    var a = new Node(cube.X, cube.Y, cube.RedSidePos, parent, moveDirection);
+                    a.Fx=fx;
+                    a.Gx = parent.Gx + 1;
+                    OpenNodes.Enqueue();
+
+                }
+                else if(OpenNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos))
+                {
+                    var old = OpenNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
+                    old.Gx=parent.Gx+1;
+                }
+                 
+            }
+            else if (info == Status.Winner && cube.RedSideIsOnBottom())
+            {
+                resultMoves.Push(moveDirection);
+                Node curr = parent;
+
+                do
+                {
+                    resultMoves.Push(curr.InitMove);
+                    curr = curr.Parent;
+                } while (curr.Parent != null);
+                return true;
+            }
+            return false;
+        }
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             
@@ -208,7 +297,7 @@ namespace WindowsFormsApp1
 
             graphics = CreateGraphics();
 
-            mapData = File.ReadAllLines("Новый текстовый документ.txt");
+            mapData = File.ReadAllLines("../../Новый текстовый документ.txt");
             mapGraphics = new Rectangle[mapData.Length][];
 
             for (int i=0; i<mapData.Length;i++)
@@ -225,9 +314,15 @@ namespace WindowsFormsApp1
                     else if (mapData[i][j] == '1')
                     {
                         graphics.DrawRectangle(blackPen, mapGraphics[i][j]);
+                        numOfFloorTiles++;
 
                     }
-                    else graphics.FillRectangle(greenPen.Brush, mapGraphics[i][j]);
+                    else
+                    {
+                        numOfFloorTiles++;
+                        target = new Node(i, j, Sides.Bottom);
+                        graphics.FillRectangle(greenPen.Brush, mapGraphics[i][j]);
+                    }
                 }
             }
 

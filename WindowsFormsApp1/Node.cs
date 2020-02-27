@@ -16,6 +16,9 @@ namespace WindowsFormsApp1
             return $"X{X}Y{Y}R{RedSidePos}";
         }
 
+        public float Fx { get; set; }
+        public int Gx { get; set; }
+
         public Geometry.Sides RedSidePos { get; set; }
 
         public Geometry.Directions InitMove { get; set; }
