@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+ 
 
 using static WindowsFormsApp1.Geometry;
 
@@ -24,9 +24,10 @@ namespace WindowsFormsApp1
         Rectangle[][]   mapGraphics;
         
         Priority_Queue.StablePriorityQueue<Node> OpenNodes;
-        Queue<Node> ClosedNodes = new Queue<Node>();
+        List<Node> ClosedNodes = new List<Node>();
         Stack<Directions> resultMoves= new Stack<Directions>();
 
+        System.Diagnostics.Stopwatch dt;
         Node target, start;
         public 
         const int   xOffset = 20, 
@@ -126,7 +127,7 @@ namespace WindowsFormsApp1
 
 
 
-                ClosedNodes.Enqueue(curr);
+                ClosedNodes.Add(curr);
             }
             return false;
         }
@@ -143,9 +144,9 @@ namespace WindowsFormsApp1
 
             } while (resultMoves.Count > 0);
         }
-        private void callMessageBox(String method, int pathLength, int nodeCount)
+        private void callMessageBox(String method,long timeSpan, int pathLength, int nodeCount)
         {
-            MessageBox.Show($"Метод поиска - {method}\n Длина пути - {pathLength}\nПосещено вершин - {nodeCount}", "Обход завершён", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show($"Метод поиска - {method}\n Длина пути - {pathLength}\nПосещено вершин - {nodeCount}\nВремя обхода  {timeSpan}", "Обход завершён", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
@@ -175,11 +176,15 @@ namespace WindowsFormsApp1
                     {
                         
                         OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos,null),100000);
+                         dt.Start();
                         if (AI()) 
-                        { 
-                            cube.X = ClosedNodes.Peek().X;
-                            cube.Y = ClosedNodes.Peek().Y;
-                            cube.RedSidePos = ClosedNodes.Peek().RedSidePos;
+                        {
+                            dt.Stop();
+                            var dtwidthpassed = dt.ElapsedMilliseconds;
+                            dt.Reset();
+                            cube.X = ClosedNodes[0].X;
+                            cube.Y = ClosedNodes[0].Y;
+                            cube.RedSidePos = ClosedNodes[0].RedSidePos;
                             var aasd = resultMoves.Count;
                             String date = DateTime.Now.ToString().Replace(':','-');
                             for (int i=0;i<aasd;i++)
@@ -187,12 +192,14 @@ namespace WindowsFormsApp1
                                 File.AppendAllText($"../../{date}.txt", $"x^{i}+");
                             }
                             CommandChainExecution();
-                            callMessageBox("Поиск в ширину", aasd, nodesVisited);
+                            callMessageBox("Поиск в ширину",dtwidthpassed, aasd, nodesVisited);
 
                                 }
                         OpenNodes.Clear();
                         ClosedNodes.Clear();
                         resultMoves.Clear();
+                        GC.Collect();
+                        System.Threading.Thread.Sleep(5000);
                         nodesVisited= 1;
                         
                         break;
@@ -202,18 +209,24 @@ namespace WindowsFormsApp1
                         
                         OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos, null), 100000);
                         OpenNodes.First.Gx = 0;
+                        dt.Start();
                         if (AStar())
                         {
-                            cube.X = ClosedNodes.Peek().X;
-                            cube.Y = ClosedNodes.Peek().Y;
-                            cube.RedSidePos = ClosedNodes.Peek().RedSidePos;
+                            dt.Stop();
+                            var dtpassed = dt.ElapsedMilliseconds;
+                            dt.Reset();
+                            cube.X = ClosedNodes[0].X;
+                            cube.Y = ClosedNodes[0].Y;
+                            cube.RedSidePos = ClosedNodes[0].RedSidePos;
                             var aasd = resultMoves.Count;
                             CommandChainExecution();
-                            callMessageBox("Эвристика по методу "+ (currMethod==HeuristicsMethod.Manhattan?"манхэттенсковго расстояния":"эвкидовского расстояния между точками"), aasd, nodesVisited);
+                            callMessageBox("Эвристика по методу "+ (currMethod==HeuristicsMethod.Manhattan?"манхэттенсковго расстояния":"эвкидовского расстояния между точками"),dtpassed, aasd, nodesVisited);
                         }
                         OpenNodes.Clear();
                         ClosedNodes.Clear();
                         resultMoves.Clear();
+                        GC.Collect();
+                        System.Threading.Thread.Sleep(5000);
                         nodesVisited = 1;
                         break;
                     }
@@ -278,17 +291,18 @@ namespace WindowsFormsApp1
 
 
 
-                ClosedNodes.Enqueue(curr);
+                ClosedNodes.Add(curr);
             }
             return false;
         }
-        private double Heuristic(Cube curr)
+        private float Heuristic(Cube curr)
         {
-            double h;
+            float h;
+            int dx=curr.X-target.X, dy=curr.Y-target.Y;
             if(currMethod==HeuristicsMethod.Manhattan)
-                h= Math.Abs( curr.X-target.X)+Math.Abs(curr.Y-target.Y);
+                h= Math.Abs(dx)+Math.Abs(dy);
             else
-                h= Math.Sqrt(Math.Pow(curr.X - target.X, 2) + Math.Pow(curr.Y - target.Y, 2));
+                h= (float)Math.Sqrt(dx*dx + dy*dy);
 
             if (h >= 0 && h <= numOfFloorTiles - curr.Gx) return h;
             else
@@ -306,10 +320,22 @@ namespace WindowsFormsApp1
 
             if (info == Status.Alive)
             {
+                Node openExist;
+                Node closedExist;
+                try
+                {
+                    openExist = OpenNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
+                }
+                catch { openExist = null; }
+                try
+                {
+                    closedExist = ClosedNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
+                }
+                catch { closedExist = null; }
                 if (
-                        !(
-                        OpenNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos) ||
-                        ClosedNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos)
+                        !((openExist != null)
+                         ||
+                        (closedExist!=null)
                          )
                       )
                 {
@@ -317,37 +343,27 @@ namespace WindowsFormsApp1
                     a.Fx=fx;
                     a.Gx = parent.Gx + 1;
                     OpenNodes.Enqueue(a,(float)a.Fx);
-                    OpenNodes.OrderBy(x => x.Fx);
+                    
 
                 }
-                else if(OpenNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos&&x.Fx>fx))
+                else if(openExist.Fx>fx)
                 {
                     var old = OpenNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
+                    old.Fx = fx;
                     old.Gx=parent.Gx+1;
                     old.Parent = parent;
-                    OpenNodes.OrderBy(x => x.Fx);
+                    
                 }
-                else if (ClosedNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos&&x.Fx>fx))
+                else if (closedExist.Fx>fx)
                 {
                     var old = ClosedNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
+                    old.Fx = fx;
                     old.Gx = parent.Gx + 1;
                     old.Parent = parent;
+                    ClosedNodes.Remove(old);
+                    OpenNodes.Enqueue(old, (float)old.Fx);
 
-                    cube.MoveCube(Directions.West);
-                    if (AddNodeToOpenQueueAStar(old, Directions.West)) return true;
-                    cube.MoveCube(Directions.East);
-
-                    cube.MoveCube(Directions.North);
-                    if (AddNodeToOpenQueueAStar(old, Directions.North)) return true;
-                    cube.MoveCube(Directions.South);
-
-                    cube.MoveCube(Directions.East);
-                    if (AddNodeToOpenQueueAStar(old, Directions.East)) return true;
-                    cube.MoveCube(Directions.West);
-
-                    cube.MoveCube(Directions.South);
-                    if (AddNodeToOpenQueueAStar(old, Directions.South)) return true;
-                    cube.MoveCube(Directions.North);
+                    
 
                 }
 
@@ -387,6 +403,7 @@ namespace WindowsFormsApp1
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            dt = new System.Diagnostics.Stopwatch();
             Text = currMethod.ToString();
             blackPen = new Pen(Color.Black);
             
