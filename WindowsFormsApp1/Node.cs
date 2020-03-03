@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WindowsFormsApp1
 {
-    class Node
+    class Node : Priority_Queue.StablePriorityQueueNode
     {
         public int X { get; set; }
         public int Y { get; set; }
@@ -16,7 +16,7 @@ namespace WindowsFormsApp1
             return $"X{X}Y{Y}R{RedSidePos}";
         }
 
-        public float Fx { get; set; }
+        public double Fx { get; set; }
         public int Gx { get; set; }
 
         public Geometry.Sides RedSidePos { get; set; }

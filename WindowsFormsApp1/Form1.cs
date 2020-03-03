@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
+
 using static WindowsFormsApp1.Geometry;
 
 namespace WindowsFormsApp1
@@ -20,15 +22,18 @@ namespace WindowsFormsApp1
     {
         string[]        mapData;
         Rectangle[][]   mapGraphics;
-        Queue<Node> OpenNodes = new Queue<Node>();
+        
+        Priority_Queue.StablePriorityQueue<Node> OpenNodes;
         Queue<Node> ClosedNodes = new Queue<Node>();
         Stack<Directions> resultMoves= new Stack<Directions>();
-        Node target;
+
+        Node target, start;
         public 
         const int   xOffset = 20, 
                     yOffset = 20,
                     tileSize = 30;
-        int numOfFloorTiles=0;
+        int         numOfFloorTiles=0,
+                    nodesVisited=1;
         
         Graphics    graphics;
         Pen         blackPen;
@@ -36,6 +41,15 @@ namespace WindowsFormsApp1
         Pen         greenPen;
 
         Cube        cube;
+
+        enum HeuristicsMethod
+        {
+            Manhattan,
+            Euclid
+        }
+
+        HeuristicsMethod currMethod=HeuristicsMethod.Manhattan;
+        
         public Form1()
         {
             InitializeComponent();
@@ -54,7 +68,7 @@ namespace WindowsFormsApp1
         private bool AddNodeToOpenQueueWidth(Node parent, Directions moveDirection)
         {
             var info = GetTileInfo(cube.X, cube.Y);
-
+            nodesVisited++;
             if (info == Status.Alive)
             {
                 if (
@@ -64,7 +78,7 @@ namespace WindowsFormsApp1
                          )
                       )
                 {
-                    OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos, parent, moveDirection));
+                    OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos, parent, moveDirection),0);
 
                 }
             }
@@ -122,14 +136,17 @@ namespace WindowsFormsApp1
             do
             {
                 cube.MoveCube(resultMoves.Pop());
-                System.Threading.Thread.Sleep(500);
+                System.Threading.Thread.Sleep(300);
                 graphics.Clear(Color.White);
                 DrawMap();
                 cube.DrawCube(graphics);
 
             } while (resultMoves.Count > 0);
         }
-
+        private void callMessageBox(String method, int pathLength, int nodeCount)
+        {
+            MessageBox.Show($"Метод поиска - {method}\n Длина пути - {pathLength}\nПосещено вершин - {nodeCount}", "Обход завершён", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
         private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
             switch(e.KeyCode)
@@ -156,28 +173,70 @@ namespace WindowsFormsApp1
                     }
                 case Keys.Enter:
                     {
-                        OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos,null));
+                        
+                        OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos,null),100000);
                         if (AI()) 
                         { 
                             cube.X = ClosedNodes.Peek().X;
                             cube.Y = ClosedNodes.Peek().Y;
                             cube.RedSidePos = ClosedNodes.Peek().RedSidePos;
+                            var aasd = resultMoves.Count;
+                            String date = DateTime.Now.ToString().Replace(':','-');
+                            for (int i=0;i<aasd;i++)
+                            {
+                                File.AppendAllText($"../../{date}.txt", $"x^{i}+");
+                            }
                             CommandChainExecution();
+                            callMessageBox("Поиск в ширину", aasd, nodesVisited);
+
                                 }
                         OpenNodes.Clear();
                         ClosedNodes.Clear();
                         resultMoves.Clear();
+                        nodesVisited= 1;
                         
                         break;
                     }
                 case Keys.Space:
                     {
-                        OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos, null));
-                        OpenNodes.Peek().Gx = 0;
-                        if (AStar()) ;
+                        
+                        OpenNodes.Enqueue(new Node(cube.X, cube.Y, cube.RedSidePos, null), 100000);
+                        OpenNodes.First.Gx = 0;
+                        if (AStar())
+                        {
+                            cube.X = ClosedNodes.Peek().X;
+                            cube.Y = ClosedNodes.Peek().Y;
+                            cube.RedSidePos = ClosedNodes.Peek().RedSidePos;
+                            var aasd = resultMoves.Count;
+                            CommandChainExecution();
+                            callMessageBox("Эвристика по методу "+ (currMethod==HeuristicsMethod.Manhattan?"манхэттенсковго расстояния":"эвкидовского расстояния между точками"), aasd, nodesVisited);
+                        }
+                        OpenNodes.Clear();
+                        ClosedNodes.Clear();
+                        resultMoves.Clear();
+                        nodesVisited = 1;
                         break;
                     }
-
+                case Keys.D1:
+                    {
+                        currMethod = HeuristicsMethod.Manhattan;
+                        Text = currMethod.ToString();
+                        break;
+                    }
+                case Keys.D2:
+                    {
+                        currMethod = HeuristicsMethod.Euclid;
+                        Text = currMethod.ToString();
+                        break;
+                    }
+                case Keys.Escape:
+                    {
+                        cube.MoveCube(start.X, start.Y, start.RedSidePos);
+                        graphics.Clear(Color.White);
+                        DrawMap();
+                        cube.DrawCube(graphics);
+                        break;
+                    }
             }
             var a = GetTileInfo(cube.X, cube.Y);
             if (a == Status.Dead/*||(cube.RedSideIsOnBottom()&&a==Status.Winner)*/) this.Close();
@@ -223,17 +282,27 @@ namespace WindowsFormsApp1
             }
             return false;
         }
-        private float Heuristic(Cube curr)
+        private double Heuristic(Cube curr)
         {
-            float h= Math.Abs( curr.X-target.X)+Math.Abs(curr.Y-target.Y);
-            if(h>=0&&h<=numOfFloorTiles-curr.Gx) return h;
-            else return 100000;
+            double h;
+            if(currMethod==HeuristicsMethod.Manhattan)
+                h= Math.Abs( curr.X-target.X)+Math.Abs(curr.Y-target.Y);
+            else
+                h= Math.Sqrt(Math.Pow(curr.X - target.X, 2) + Math.Pow(curr.Y - target.Y, 2));
+
+            if (h >= 0 && h <= numOfFloorTiles - curr.Gx) return h;
+            else
+            {
+                this.Close();
+                return 0;
+            }
         }
-        private void AddNodeToOpenQueueAStar(Node parent, Directions moveDirection)
+        
+        private bool AddNodeToOpenQueueAStar(Node parent, Directions moveDirection)
         {
             var info = GetTileInfo(cube.X, cube.Y);
             var fx = cube.Gx+Heuristic(cube);
-
+            nodesVisited++;
 
             if (info == Status.Alive)
             {
@@ -247,16 +316,43 @@ namespace WindowsFormsApp1
                     var a = new Node(cube.X, cube.Y, cube.RedSidePos, parent, moveDirection);
                     a.Fx=fx;
                     a.Gx = parent.Gx + 1;
-                    OpenNodes.Enqueue();
+                    OpenNodes.Enqueue(a,(float)a.Fx);
+                    OpenNodes.OrderBy(x => x.Fx);
 
                 }
-                else if(OpenNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos))
+                else if(OpenNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos&&x.Fx>fx))
                 {
                     var old = OpenNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
                     old.Gx=parent.Gx+1;
+                    old.Parent = parent;
+                    OpenNodes.OrderBy(x => x.Fx);
                 }
-                 
+                else if (ClosedNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos&&x.Fx>fx))
+                {
+                    var old = ClosedNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
+                    old.Gx = parent.Gx + 1;
+                    old.Parent = parent;
+
+                    cube.MoveCube(Directions.West);
+                    if (AddNodeToOpenQueueAStar(old, Directions.West)) return true;
+                    cube.MoveCube(Directions.East);
+
+                    cube.MoveCube(Directions.North);
+                    if (AddNodeToOpenQueueAStar(old, Directions.North)) return true;
+                    cube.MoveCube(Directions.South);
+
+                    cube.MoveCube(Directions.East);
+                    if (AddNodeToOpenQueueAStar(old, Directions.East)) return true;
+                    cube.MoveCube(Directions.West);
+
+                    cube.MoveCube(Directions.South);
+                    if (AddNodeToOpenQueueAStar(old, Directions.South)) return true;
+                    cube.MoveCube(Directions.North);
+
+                }
+
             }
+            
             else if (info == Status.Winner && cube.RedSideIsOnBottom())
             {
                 resultMoves.Push(moveDirection);
@@ -282,7 +378,7 @@ namespace WindowsFormsApp1
             {
                 for (int j = 0; j < mapData[i].Length; j++)
                 {
-                    if (mapData[i][j] == '0') continue;
+                    if (mapData[i][j] == '*') continue;
                     else if (mapData[i][j] == '1') graphics.DrawRectangle(blackPen, mapGraphics[i][j]);
                     else graphics.FillRectangle(greenPen.Brush, mapGraphics[i][j]);
                 }
@@ -291,6 +387,7 @@ namespace WindowsFormsApp1
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            Text = currMethod.ToString();
             blackPen = new Pen(Color.Black);
             
             greenPen = new Pen(Color.Green);
@@ -310,7 +407,7 @@ namespace WindowsFormsApp1
                     mapGraphics[i][j].X = xOffset + j * tileSize;
                     mapGraphics[i][j].Y = yOffset + i * tileSize;
                     mapGraphics[i][j].Width = mapGraphics[i][j].Height = tileSize;
-                    if (mapData[i][j] == '0') continue;
+                    if (mapData[i][j] == '*') continue;
                     else if (mapData[i][j] == '1')
                     {
                         graphics.DrawRectangle(blackPen, mapGraphics[i][j]);
@@ -325,8 +422,10 @@ namespace WindowsFormsApp1
                     }
                 }
             }
-
+            OpenNodes = new Priority_Queue.StablePriorityQueue<Node>(mapData.Length * mapData[0].Length);
             cube = new Cube(1, 1);
+            cube.RedSidePos = Sides.Front;
+            start = new Node(cube.X, cube.Y, cube.RedSidePos);
             cube.DrawCube(graphics);
             
         }

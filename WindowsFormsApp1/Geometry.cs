@@ -8,6 +8,7 @@
             North,
             East,
             South
+        
         }
         public enum Status
         {

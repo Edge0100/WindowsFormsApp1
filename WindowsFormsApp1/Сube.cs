@@ -115,6 +115,7 @@ namespace WindowsFormsApp1
                         Y++;
                         break;
                     }
+                
             }
             cubeSide.X = Form1.xOffset + xOffset + X * Form1.tileSize;
             cubeSide.Y = Form1.yOffset + yOffset + Y * Form1.tileSize;
@@ -254,7 +255,14 @@ namespace WindowsFormsApp1
             }
 
         }
-
+        public void MoveCube(int x, int y, Sides redSidePos)
+        {
+            X = x;
+            Y = y;
+            RedSidePos = redSidePos;
+            cubeSide.X = Form1.xOffset + xOffset + X * Form1.tileSize;
+            cubeSide.Y = Form1.yOffset + yOffset + Y * Form1.tileSize;
+        }
 
     }
 }
