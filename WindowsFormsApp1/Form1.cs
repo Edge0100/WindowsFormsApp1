@@ -199,7 +199,7 @@ namespace WindowsFormsApp1
                         ClosedNodes.Clear();
                         resultMoves.Clear();
                         GC.Collect();
-                        System.Threading.Thread.Sleep(5000);
+                        //System.Threading.Thread.Sleep(5000);
                         nodesVisited= 1;
                         
                         break;
@@ -226,7 +226,7 @@ namespace WindowsFormsApp1
                         ClosedNodes.Clear();
                         resultMoves.Clear();
                         GC.Collect();
-                        System.Threading.Thread.Sleep(5000);
+                        //System.Threading.Thread.Sleep(5000);
                         nodesVisited = 1;
                         break;
                     }
@@ -304,7 +304,7 @@ namespace WindowsFormsApp1
             else
                 h= (float)Math.Sqrt(dx*dx + dy*dy);
 
-            if (h >= 0 && h <= numOfFloorTiles - curr.Gx) return h;
+            if (h >= 0 /*&& h <= (numOfFloorTiles - curr.Gx)*0.7*/) return h;
             else
             {
                 this.Close();
@@ -322,20 +322,16 @@ namespace WindowsFormsApp1
             {
                 Node openExist;
                 Node closedExist;
-                try
-                {
-                    openExist = OpenNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
-                }
-                catch { openExist = null; }
-                try
-                {
-                    closedExist = ClosedNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
-                }
-                catch { closedExist = null; }
+                
+                
+                
+                
+                
+                
                 if (
-                        !((openExist != null)
+                        !((OpenNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos))
                          ||
-                        (closedExist!=null)
+                        (ClosedNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos))
                          )
                       )
                 {
@@ -346,7 +342,7 @@ namespace WindowsFormsApp1
                     
 
                 }
-                else if(openExist.Fx>fx)
+                else if (OpenNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos && x.Fx > fx))
                 {
                     var old = OpenNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
                     old.Fx = fx;
@@ -354,7 +350,7 @@ namespace WindowsFormsApp1
                     old.Parent = parent;
                     
                 }
-                else if (closedExist.Fx>fx)
+                else if (ClosedNodes.Any(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos&& x.Fx > fx))
                 {
                     var old = ClosedNodes.First(x => x.X == cube.X && x.Y == cube.Y && x.RedSidePos == cube.RedSidePos);
                     old.Fx = fx;
@@ -411,7 +407,8 @@ namespace WindowsFormsApp1
 
             graphics = CreateGraphics();
 
-            mapData = File.ReadAllLines("../../Новый текстовый документ.txt");
+            //mapData = File.ReadAllLines("../../Drew.txt");
+            mapData = File.ReadAllLines("../../Drew.txt");
             mapGraphics = new Rectangle[mapData.Length][];
 
             for (int i=0; i<mapData.Length;i++)
