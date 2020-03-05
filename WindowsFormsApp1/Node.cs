@@ -16,7 +16,7 @@ namespace WindowsFormsApp1
             return $"X{X}Y{Y}R{RedSidePos}";
         }
 
-        public double Fx { get; set; }
+        public float Fx { get; set; }
         public int Gx { get; set; }
 
         public Geometry.Sides RedSidePos { get; set; }

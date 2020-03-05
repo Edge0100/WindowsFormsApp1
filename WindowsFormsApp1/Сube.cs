@@ -11,7 +11,7 @@ namespace WindowsFormsApp1
         Pen blackPen;
         Pen transparentRedPen;
         Pen redPen;
-        
+        Pen whitePen;
         const int xOffset = 5, yOffset = 5, cubeSize = 20;
         
         public Cube(int startMapX, int startMapY)
@@ -20,11 +20,13 @@ namespace WindowsFormsApp1
             Y = startMapY;
 
             cubeSide = new Rectangle();
-
+            
             cubeSide.X = Form1.xOffset + xOffset + Y * Form1.tileSize;
             cubeSide.Y = Form1.yOffset + yOffset + X * Form1.tileSize;
 
             cubeSide.Width = cubeSide.Height = cubeSize;
+
+            
 
             RedSidePos = Sides.Bottom;
 
@@ -32,6 +34,8 @@ namespace WindowsFormsApp1
             redPen = new Pen(Color.Red);
             redPen.Width = 4;
             blackPen = new Pen(Color.Black);
+            whitePen = new Pen(Color.White);
+            
         }
         public int Gx { get; set; }
         public Sides RedSidePos
@@ -50,6 +54,18 @@ namespace WindowsFormsApp1
         {
             return RedSidePos == Sides.Bottom;
         }
+        public void ClearCube(Graphics graphics)
+        {
+
+            graphics.FillRectangle(whitePen.Brush,cubeSide.X-1, cubeSide.Y-1, cubeSide.Width+2,cubeSide.Height+2);
+            
+        }
+        public void ClearCube(Graphics graphics, Pen pen)
+        {
+
+            graphics.FillRectangle(pen.Brush, cubeSide.X - 1, cubeSide.Y - 1, cubeSide.Width + 2, cubeSide.Height + 2);
+
+        }
         public void DrawCube(Graphics graphics)
         {
             int half = cubeSize / 2;
@@ -58,6 +74,7 @@ namespace WindowsFormsApp1
                 case Sides.Top:
                     {
                         graphics.FillRectangle(redPen.Brush, cubeSide);
+
                         break;
                     }
                 case Sides.Bottom:
@@ -93,6 +110,7 @@ namespace WindowsFormsApp1
         }
         public void MoveCube(Directions direction)
         {
+            
             switch (direction)
             {
                 case Directions.West:
