@@ -20,7 +20,7 @@ namespace WindowsFormsApp1
 
     public partial class Form1 : Form
     {
-        string[]        mapData;
+        static string[]        mapData;
         Rectangle[][]   mapGraphics;
         Rectangle prev;
         
@@ -35,13 +35,15 @@ namespace WindowsFormsApp1
                     yOffset = 20,
                     tileSize = 30;
         int         numOfFloorTiles=0,
-                    nodesVisited=1;
+                    nodesVisited=1,
+                    mapChosen=9;
         
         Graphics    graphics;
         Pen         blackPen;
         
         Pen         greenPen;
-
+        Pen         bluePen;
+        Pen         lightGreenPen;
 
 
         Cube        cube;
@@ -59,12 +61,14 @@ namespace WindowsFormsApp1
             InitializeComponent();
         }
         
-        private Status GetTileInfo(int i, int j)
+        internal static Status GetTileInfo(int i, int j)
         {
-            switch (mapData[j][i])
+            switch (mapData[i][j])
             {
                 case '1': return Status.Alive;
                 case '2': return Status.Winner;
+                case '3': return Status.Start;
+                case '4': return Status.Cens;
                 default:  return Status.Dead;
             }
         }
@@ -73,7 +77,7 @@ namespace WindowsFormsApp1
         {
             var info = GetTileInfo(cube.X, cube.Y);
             nodesVisited++;
-            if (info == Status.Alive)
+            if (info == Status.Alive || info == Status.Start || (info == Status.Cens && cube.RedSideIsOnBottom()))
             {
                 if (
                         !(
@@ -98,6 +102,7 @@ namespace WindowsFormsApp1
                 } while (curr.Parent!= null);
                 return true;
             }
+
             return false;
         }
         private bool AI()
@@ -149,7 +154,12 @@ namespace WindowsFormsApp1
         }
         private void callMessageBox(String method,long timeSpan, int pathLength, int nodeCount)
         {
-            MessageBox.Show($"Метод поиска - {method}\n Длина пути - {pathLength}\nПосещено вершин - {nodeCount}\nВремя обхода  {timeSpan}", "Обход завершён", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            string str = $"Метод поиска - {method}\n Длина пути - {pathLength}\nПосещено вершин - {nodeCount}\nВремя обхода  {timeSpan}\n";
+            File.AppendAllText($"../../maps/Map ({mapChosen})_log.txt", str);
+            File.AppendAllText($"../../maps/Map ({mapChosen})_log.txt", "################\n\n");
+            MessageBox.Show(str, "Обход завершён", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            
         }
         private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
@@ -159,24 +169,28 @@ namespace WindowsFormsApp1
                     {
                         cube.ClearCube(graphics);
                         cube.MoveCube(Directions.West);
+                        VibeCheck();
                         break;
                     }
                 case Keys.Up:
                     {
                         cube.ClearCube(graphics);
                         cube.MoveCube(Directions.North);
+                        VibeCheck();
                         break;
                     }
                 case Keys.Right:
                     {
                         cube.ClearCube(graphics);
                         cube.MoveCube(Directions.East);
+                        VibeCheck();
                         break;
                     }
                 case Keys.Down:
                     {
                         cube.ClearCube(graphics);
                         cube.MoveCube(Directions.South);
+                        VibeCheck();
                         break;
                     }
                 case Keys.Enter:
@@ -252,23 +266,84 @@ namespace WindowsFormsApp1
                     }
                 case Keys.Escape:
                     {
-                        cube.ClearCube(graphics, greenPen);
+                        cube.ClearCube(graphics);
                         cube.MoveCube(start.X, start.Y, start.RedSidePos);
                         
-                      ;
+                      
                         cube.DrawCube(graphics);
                         break;
                     }
+                case Keys.NumPad1:
+                    {
+                        mapChosen = 1;
+                        Map_Reload(mapChosen);
+                        break;
+                    }
+                case Keys.NumPad2:
+                    {
+                        mapChosen = 2;
+                        Map_Reload(mapChosen);
+                        break;
+                    }
+                case Keys.NumPad3:
+                    {
+                        mapChosen = 3;
+                        Map_Reload(mapChosen);
+                        break;
+                    }
+                case Keys.NumPad4:
+                    {
+                        mapChosen = 4;
+                        Map_Reload(mapChosen);
+                        break;
+                    }
+                case Keys.NumPad5:
+                    {
+                        mapChosen = 5;
+                        Map_Reload(mapChosen);
+                        break;
+                    }
+                case Keys.NumPad6:
+                    {
+                        mapChosen = 6;
+                        Map_Reload(mapChosen);
+                        break;
+                    }
+                case Keys.NumPad7:
+                    {
+                        mapChosen = 7;
+                        Map_Reload(mapChosen);
+                        break;
+                    }
+                case Keys.NumPad8:
+                    {
+                        mapChosen = 8;
+                        Map_Reload(mapChosen);
+                        break;
+                    }
+                case Keys.NumPad9:
+                    {
+                        mapChosen = 9;
+                        Map_Reload(mapChosen);
+                        break;
+                    }
             }
-            var a = GetTileInfo(cube.X, cube.Y);
-            if (a == Status.Dead/*||(cube.RedSideIsOnBottom()&&a==Status.Winner)*/) this.Close();
-            else
-            {
-                
-             
-                cube.DrawCube(graphics);
-            }
+            
+          
 
+        }
+        private void VibeCheck()
+        {
+            var a = GetTileInfo(cube.X, cube.Y);
+            if (a == Status.Dead || (!cube.RedSideIsOnBottom() && a == Status.Cens))
+            {
+
+                cube.MoveCube(start.X, start.Y, start.RedSidePos);
+
+
+                
+            }
+            cube.DrawCube(graphics);
         }
         private bool AStar()
         {
@@ -327,7 +402,7 @@ namespace WindowsFormsApp1
             var fx = cube.Gx+Heuristic(cube);
             nodesVisited++;
 
-            if (info == Status.Alive)
+            if (info == Status.Alive||info==Status.Start||(info==Status.Cens&&cube.RedSideIsOnBottom()))
             {
     
                 
@@ -387,19 +462,75 @@ namespace WindowsFormsApp1
             
         }
 
-        private void DrawMap()
+       
+        private void Map_Reload(int mapID)
         {
+            start = null;
+            graphics.Clear(Color.White);
+            OpenNodes.Clear();
+            ClosedNodes.Clear();
+            resultMoves.Clear();
+            numOfFloorTiles = 0;
+            nodesVisited = 1;
+
+            GC.Collect();
+            string path = $"../../maps/Map ({mapID}).txt";
+            mapData = File.ReadAllLines(path);
+            Map_Modifier();
+
+            mapGraphics = new Rectangle[mapData.Length][];
+
             for (int i = 0; i < mapData.Length; i++)
             {
+                
+                mapGraphics[i] = new Rectangle[mapData[i].Length];
+
                 for (int j = 0; j < mapData[i].Length; j++)
                 {
+                    mapGraphics[i][j].X = xOffset + j * tileSize;
+                    mapGraphics[i][j].Y = yOffset + i * tileSize;
+                    mapGraphics[i][j].Width = mapGraphics[i][j].Height = tileSize;
                     if (mapData[i][j] == '*') continue;
-                    else if (mapData[i][j] == '1') graphics.DrawRectangle(blackPen, mapGraphics[i][j]);
-                    else graphics.FillRectangle(greenPen.Brush, mapGraphics[i][j]);
+                    else if (mapData[i][j] == '1') 
+                    {
+                        graphics.DrawRectangle(blackPen, mapGraphics[i][j]);
+                        numOfFloorTiles++;
+
+                    }
+                    else if(mapData[i][j] == '3')
+                    {
+                        graphics.FillRectangle(bluePen.Brush, mapGraphics[i][j]);
+                        cube = new Cube(i, j);
+                        cube.RedSidePos = Sides.Front;
+                        start = new Node(cube.X, cube.Y, cube.RedSidePos);
+                        numOfFloorTiles++;
+                    }
+                    else if (mapData[i][j] == '4')
+                    {
+                        graphics.FillRectangle(lightGreenPen.Brush, mapGraphics[i][j]);
+                        
+                        numOfFloorTiles++;
+                    }
+                    else
+                    {
+                        numOfFloorTiles++;
+                        target = new Node(i, j, Sides.Bottom);
+                        graphics.FillRectangle(greenPen.Brush, mapGraphics[i][j]);
+                    }
                 }
             }
+            File.WriteAllLines(path, mapData);
+            OpenNodes = new Priority_Queue.StablePriorityQueue<Node>(mapData.Length * mapData[0].Length * 6);
+            
+            
+            if (start == null)
+            {
+                cube = new Cube(1, 1);
+                cube.RedSidePos = Sides.Front;
+                start = new Node(cube.X, cube.Y, cube.RedSidePos);
+            }
+            cube.DrawCube(graphics);
         }
-
         private void Form1_Load(object sender, EventArgs e)
         {
             prev = new Rectangle();
@@ -409,9 +540,10 @@ namespace WindowsFormsApp1
             blackPen = new Pen(Color.Black);
             
             greenPen = new Pen(Color.Green);
-
+            bluePen = new Pen(Color.Blue);
+            lightGreenPen = new Pen(Color.LightGreen);
             graphics = CreateGraphics();
-            mapData = File.ReadAllLines("../../big map.txt");
+            mapData = File.ReadAllLines("../../maps/Map (9).txt");
             //mapData = File.ReadAllLines("../../Drew.txt");
             //mapData = File.ReadAllLines("../../Новый текстовый документ.txt");
             mapGraphics = new Rectangle[mapData.Length][];
@@ -447,6 +579,27 @@ namespace WindowsFormsApp1
             start = new Node(cube.X, cube.Y, cube.RedSidePos);
             cube.DrawCube(graphics);
             
+        }
+        private void Map_Modifier()
+        {
+            if(mapData[0][0]!='*')
+            {
+                int newLength = mapData[0].Length + 2;
+                string[] newMapData= new string[mapData.Length+2];
+                newMapData[0] = newMapData[newMapData.Length - 1] = new string('*', newLength);
+                for (int i=0; i<mapData.Length;i++)
+                {
+                    newMapData[i + 1] = '*'+mapData[i].Replace(" ", "").Replace("0", "*")+'*';
+                }
+                mapData = newMapData;
+            }
+            if (mapData[0].Contains(' '))
+            {
+                for (int i = 0; i < mapData.Length; i++)
+                {
+                    mapData[i] = mapData[i].Replace(" ", "");
+                }
+            }
         }
     }
     

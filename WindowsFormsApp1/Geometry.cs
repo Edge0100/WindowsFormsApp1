@@ -14,6 +14,8 @@
         {
             Dead,
             Alive,
+            Cens,
+            Start,
             Winner
         }
         public enum Sides

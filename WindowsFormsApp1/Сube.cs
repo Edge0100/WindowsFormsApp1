@@ -12,6 +12,9 @@ namespace WindowsFormsApp1
         Pen transparentRedPen;
         Pen redPen;
         Pen whitePen;
+        Pen greenPen;
+        Pen bluePen;
+        Pen lightGreenPen;
         const int xOffset = 5, yOffset = 5, cubeSize = 20;
         
         public Cube(int startMapX, int startMapY)
@@ -35,7 +38,9 @@ namespace WindowsFormsApp1
             redPen.Width = 4;
             blackPen = new Pen(Color.Black);
             whitePen = new Pen(Color.White);
-            
+            greenPen = new Pen(Color.Green);
+            bluePen = new Pen(Color.Blue);
+            lightGreenPen = new Pen(Color.LightGreen);
         }
         public int Gx { get; set; }
         public Sides RedSidePos
@@ -56,8 +61,23 @@ namespace WindowsFormsApp1
         }
         public void ClearCube(Graphics graphics)
         {
+            switch (Form1.GetTileInfo(X,Y))
+            {
+                case Status.Alive:
+                    graphics.FillRectangle(whitePen.Brush, cubeSide.X - 1, cubeSide.Y - 1, cubeSide.Width + 2, cubeSide.Height + 2);
+                    break;
 
-            graphics.FillRectangle(whitePen.Brush,cubeSide.X-1, cubeSide.Y-1, cubeSide.Width+2,cubeSide.Height+2);
+                case Status.Cens:
+                    graphics.FillRectangle(lightGreenPen.Brush, cubeSide.X - 1, cubeSide.Y - 1, cubeSide.Width + 2, cubeSide.Height + 2);
+                    break;
+                case Status.Start:
+                    graphics.FillRectangle(bluePen.Brush, cubeSide.X - 1, cubeSide.Y - 1, cubeSide.Width + 2, cubeSide.Height + 2);
+                    break;
+                case Status.Winner:
+                    graphics.FillRectangle(greenPen.Brush, cubeSide.X - 1, cubeSide.Y - 1, cubeSide.Width + 2, cubeSide.Height + 2);
+                    break;
+            }
+            
             
         }
         public void ClearCube(Graphics graphics, Pen pen)
@@ -115,28 +135,28 @@ namespace WindowsFormsApp1
             {
                 case Directions.West:
                     {
-                        X--;
+                        Y--;
                         break;
                     }
                 case Directions.North:
                     {
-                        Y--;
+                        X--;
                         break;
                     }
                 case Directions.East:
                     {
-                        X++;
+                        Y++;
                         break;
                     }
                 case Directions.South:
                     {
-                        Y++;
+                        X++;
                         break;
                     }
                 
             }
-            cubeSide.X = Form1.xOffset + xOffset + X * Form1.tileSize;
-            cubeSide.Y = Form1.yOffset + yOffset + Y * Form1.tileSize;
+            cubeSide.X = Form1.xOffset + xOffset + Y * Form1.tileSize;
+            cubeSide.Y = Form1.yOffset + yOffset + X * Form1.tileSize;
             switch (RedSidePos)
             {
                 case Sides.Top:
@@ -278,8 +298,8 @@ namespace WindowsFormsApp1
             X = x;
             Y = y;
             RedSidePos = redSidePos;
-            cubeSide.X = Form1.xOffset + xOffset + X * Form1.tileSize;
-            cubeSide.Y = Form1.yOffset + yOffset + Y * Form1.tileSize;
+            cubeSide.X = Form1.xOffset + xOffset + Y * Form1.tileSize;
+            cubeSide.Y = Form1.yOffset + yOffset + X * Form1.tileSize;
         }
 
     }
