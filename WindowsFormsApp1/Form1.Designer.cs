@@ -28,13 +28,27 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.infoTextBox = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
+            // 
+            // infoTextBox
+            // 
+            this.infoTextBox.Enabled = false;
+            this.infoTextBox.Font = new System.Drawing.Font("Times New Roman", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.infoTextBox.Location = new System.Drawing.Point(980, 159);
+            this.infoTextBox.Multiline = true;
+            this.infoTextBox.Name = "infoTextBox";
+            this.infoTextBox.ReadOnly = true;
+            this.infoTextBox.Size = new System.Drawing.Size(408, 199);
+            this.infoTextBox.TabIndex = 0;
+            this.infoTextBox.TabStop = false;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.infoTextBox);
             this.Name = "Form1";
             this.Text = "Form1";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
@@ -42,10 +56,13 @@
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.Form1_Paint);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyUp);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
+
+        private System.Windows.Forms.TextBox infoTextBox;
     }
 }
 

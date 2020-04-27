@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MyRect.cs" />
     <Compile Include="Heuristics.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="Node.cs" />

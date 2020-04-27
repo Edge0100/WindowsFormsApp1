@@ -15,7 +15,7 @@ namespace WindowsFormsApp1
         Pen greenPen;
         Pen bluePen;
         Pen lightGreenPen;
-        const int xOffset = 5, yOffset = 5, cubeSize = 20;
+        const int xOffset = 5, yOffset = 5, cubeSize = 15;
         
         public Cube(int startMapX, int startMapY)
         {
@@ -83,7 +83,7 @@ namespace WindowsFormsApp1
         public void ClearCube(Graphics graphics, Pen pen)
         {
 
-            graphics.FillRectangle(pen.Brush, cubeSide.X - 1, cubeSide.Y - 1, cubeSide.Width + 2, cubeSide.Height + 2);
+          //  graphics.FillRectangle(pen.Brush, cubeSide.X - 1, cubeSide.Y - 1, cubeSide.Width + 2, cubeSide.Height + 2);
 
         }
         public void DrawCube(Graphics graphics)
